@@ -240,6 +240,13 @@ def parse_args():
         help="A token to use as a placeholder for the concept.",
     )
     parser.add_argument(
+        "--content_prompt",
+        type=str,
+        default=None,
+        required=True,
+        help="A token to describe the object of image.",
+    )
+    parser.add_argument(
         "--initializer_token", type=str, default=None, required=True, help="A token to use as initializer word."
     )
     parser.add_argument("--learnable_property", type=str, default="style", help="Choose between 'object' and 'style'")
@@ -531,28 +538,50 @@ imagenet_templates_small = [
     "a photo of a small {}",
 ]
 
-imagenet_style_templates_small = [
-    "a painting in the style of {}",
-    "a rendering in the style of {}",
-    "a cropped painting in the style of {}",
-    "the painting in the style of {}",
-    "a clean painting in the style of {}",
-    "a dirty painting in the style of {}",
-    "a dark painting in the style of {}",
-    "a picture in the style of {}",
-    "a cool painting in the style of {}",
-    "a close-up painting in the style of {}",
-    "a bright painting in the style of {}",
-    "a cropped painting in the style of {}",
-    "a good painting in the style of {}",
-    "a close-up painting in the style of {}",
-    "a rendition in the style of {}",
-    "a nice painting in the style of {}",
-    "a small painting in the style of {}",
-    "a weird painting in the style of {}",
-    "a large painting in the style of {}",
-]
+# imagenet_style_templates_small = [
+#     "a painting in the style of {}",
+#     "a rendering in the style of {}",
+#     "a cropped painting in the style of {}",
+#     "the painting in the style of {}",
+#     "a clean painting in the style of {}",
+#     "a dirty painting in the style of {}",
+#     "a dark painting in the style of {}",
+#     "a picture in the style of {}",
+#     "a cool painting in the style of {}",
+#     "a close-up painting in the style of {}",
+#     "a bright painting in the style of {}",
+#     "a cropped painting in the style of {}",
+#     "a good painting in the style of {}",
+#     "a close-up painting in the style of {}",
+#     "a rendition in the style of {}",
+#     "a nice painting in the style of {}",
+#     "a small painting in the style of {}",
+#     "a weird painting in the style of {}",
+#     "a large painting in the style of {}",
+# ]
 
+# add content prompt
+imagenet_style_templates_small = [
+    "a painting of {} in the style of {}",
+    "a rendering of {} in the style of {}",
+    "a cropped of {} painting in the style of {}",
+    "the painting of {} in the style of {}",
+    "a clean painting of {} in the style of {}",
+    "a dirty painting of {} in the style of {}",
+    "a dark painting of {} in the style of {}",
+    "a picture of {} in the style of {}",
+    "a cool painting of {} in the style of {}",
+    "a close-up painting of {} in the style of {}",
+    "a bright painting of {} in the style of {}",
+    "a cropped painting of {} in the style of {}",
+    "a good painting of {} in the style of {}",
+    "a close-up painting of {} in the style of {}",
+    "a rendition of {} in the style of {}",
+    "a nice painting of {} in the style of {}",
+    "a small painting of {} in the style of {}",
+    "a weird painting of {} in the style of {}",
+    "a large painting of {} in the style of {}",
+]
 
 class TextualInversionDataset(Dataset):
     def __init__(
@@ -567,6 +596,7 @@ class TextualInversionDataset(Dataset):
         random_flip=True,
         flip_p=0.5,
         set="train",
+        content="object",
         placeholder_token="*",
         center_crop=False,
     ):
@@ -575,6 +605,7 @@ class TextualInversionDataset(Dataset):
         self.tokenizer_two = tokenizer_two
         self.learnable_property = learnable_property
         self.size = size
+        self.content = content
         self.placeholder_token = placeholder_token
         self.center_crop = center_crop
         self.random_flip = random_flip
@@ -614,7 +645,8 @@ class TextualInversionDataset(Dataset):
     def __getitem__(self, i):
         example = {}
         placeholder_string = self.placeholder_token
-        text = random.choice(self.templates).format(placeholder_string)
+        content = self.content
+        text = random.choice(self.templates).format(content, placeholder_string)
 
         example["input_ids_one"] = self.tokenizer_one(
             text,
@@ -871,6 +903,7 @@ def main():
         tokenizer_one=tokenizer_one,
         tokenizer_two=tokenizer_two,
         size=args.resolution,
+        content=args.content_prompt,
         # get placeholder from tokenizer_one or two is all right 
         placeholder_token=(" ".join(tokenizer_one.convert_ids_to_tokens(placeholder_token_ids_one))),
         repeats=args.repeats,
