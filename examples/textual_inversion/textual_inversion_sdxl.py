@@ -243,7 +243,6 @@ def parse_args():
         "--content_prompt",
         type=str,
         default=None,
-        required=True,
         help="A token to describe the object of image.",
     )
     parser.add_argument(
@@ -538,30 +537,30 @@ imagenet_templates_small = [
     "a photo of a small {}",
 ]
 
-# imagenet_style_templates_small = [
-#     "a painting in the style of {}",
-#     "a rendering in the style of {}",
-#     "a cropped painting in the style of {}",
-#     "the painting in the style of {}",
-#     "a clean painting in the style of {}",
-#     "a dirty painting in the style of {}",
-#     "a dark painting in the style of {}",
-#     "a picture in the style of {}",
-#     "a cool painting in the style of {}",
-#     "a close-up painting in the style of {}",
-#     "a bright painting in the style of {}",
-#     "a cropped painting in the style of {}",
-#     "a good painting in the style of {}",
-#     "a close-up painting in the style of {}",
-#     "a rendition in the style of {}",
-#     "a nice painting in the style of {}",
-#     "a small painting in the style of {}",
-#     "a weird painting in the style of {}",
-#     "a large painting in the style of {}",
-# ]
+imagenet_style_templates_small = [
+    "a painting in the style of {}",
+    "a rendering in the style of {}",
+    "a cropped painting in the style of {}",
+    "the painting in the style of {}",
+    "a clean painting in the style of {}",
+    "a dirty painting in the style of {}",
+    "a dark painting in the style of {}",
+    "a picture in the style of {}",
+    "a cool painting in the style of {}",
+    "a close-up painting in the style of {}",
+    "a bright painting in the style of {}",
+    "a cropped painting in the style of {}",
+    "a good painting in the style of {}",
+    "a close-up painting in the style of {}",
+    "a rendition in the style of {}",
+    "a nice painting in the style of {}",
+    "a small painting in the style of {}",
+    "a weird painting in the style of {}",
+    "a large painting in the style of {}",
+]
 
 # add content prompt
-imagenet_style_templates_small = [
+imagenet_style_templates_small_with_object = [
     "a painting of {} in the style of {}",
     "a rendering of {} in the style of {}",
     "a cropped of {} painting in the style of {}",
@@ -596,7 +595,7 @@ class TextualInversionDataset(Dataset):
         random_flip=True,
         flip_p=0.5,
         set="train",
-        content="object",
+        content=None,
         placeholder_token="*",
         center_crop=False,
     ):
@@ -626,7 +625,14 @@ class TextualInversionDataset(Dataset):
             "lanczos": PIL_INTERPOLATION["lanczos"],
         }[interpolation]
 
-        self.templates = imagenet_style_templates_small if learnable_property == "style" else imagenet_templates_small
+        if learnable_property == "style":
+            if content is None:
+                self.templates = imagenet_style_templates_small
+            else:
+                self.templates = imagenet_style_templates_small_with_object
+        else:
+            assert content is None, print("if learnable_property == 'style', then we can not set content")
+            self.templates = imagenet_templates_small
         
         # image transforms
         self.train_resize = transforms.Resize(size, interpolation=transforms.InterpolationMode.BILINEAR)
@@ -646,7 +652,10 @@ class TextualInversionDataset(Dataset):
         example = {}
         placeholder_string = self.placeholder_token
         content = self.content
-        text = random.choice(self.templates).format(content, placeholder_string)
+        if not content is None:
+            text = random.choice(self.templates).format(content, placeholder_string)
+        else:
+            text = random.choice(self.templates).format(placeholder_string)
 
         example["input_ids_one"] = self.tokenizer_one(
             text,
