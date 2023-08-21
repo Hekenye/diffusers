@@ -25,6 +25,8 @@ from .attention_processor import Attention, AttnAddedKVProcessor, AttnAddedKVPro
 from .dual_transformer_2d import DualTransformer2DModel
 from .resnet import Downsample2D, FirDownsample2D, FirUpsample2D, KDownsample2D, KUpsample2D, ResnetBlock2D, Upsample2D
 from .transformer_2d import Transformer2DModel
+from .adapter4downblock import StyleDropCrossAttnDownBlock2D
+from .adapter4upblock import StyleDropCrossAttnUpBlock2D
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -112,6 +114,28 @@ def get_down_block(
         if cross_attention_dim is None:
             raise ValueError("cross_attention_dim must be specified for CrossAttnDownBlock2D")
         return CrossAttnDownBlock2D(
+            num_layers=num_layers,
+            transformer_layers_per_block=transformer_layers_per_block,
+            in_channels=in_channels,
+            out_channels=out_channels,
+            temb_channels=temb_channels,
+            add_downsample=add_downsample,
+            resnet_eps=resnet_eps,
+            resnet_act_fn=resnet_act_fn,
+            resnet_groups=resnet_groups,
+            downsample_padding=downsample_padding,
+            cross_attention_dim=cross_attention_dim,
+            num_attention_heads=num_attention_heads,
+            dual_cross_attention=dual_cross_attention,
+            use_linear_projection=use_linear_projection,
+            only_cross_attention=only_cross_attention,
+            upcast_attention=upcast_attention,
+            resnet_time_scale_shift=resnet_time_scale_shift,
+        )
+    elif down_block_type == "StyleDropCrossAttnDownBlock2D":
+        if cross_attention_dim is None:
+            raise ValueError("cross_attention_dim must be specified for CrossAttnDownBlock2D")
+        return StyleDropCrossAttnDownBlock2D(
             num_layers=num_layers,
             transformer_layers_per_block=transformer_layers_per_block,
             in_channels=in_channels,
@@ -290,6 +314,28 @@ def get_up_block(
         if cross_attention_dim is None:
             raise ValueError("cross_attention_dim must be specified for CrossAttnUpBlock2D")
         return CrossAttnUpBlock2D(
+            num_layers=num_layers,
+            transformer_layers_per_block=transformer_layers_per_block,
+            in_channels=in_channels,
+            out_channels=out_channels,
+            prev_output_channel=prev_output_channel,
+            temb_channels=temb_channels,
+            add_upsample=add_upsample,
+            resnet_eps=resnet_eps,
+            resnet_act_fn=resnet_act_fn,
+            resnet_groups=resnet_groups,
+            cross_attention_dim=cross_attention_dim,
+            num_attention_heads=num_attention_heads,
+            dual_cross_attention=dual_cross_attention,
+            use_linear_projection=use_linear_projection,
+            only_cross_attention=only_cross_attention,
+            upcast_attention=upcast_attention,
+            resnet_time_scale_shift=resnet_time_scale_shift,
+        )
+    elif up_block_type == "StyleDropCrossAttnUpBlock2D":
+        if cross_attention_dim is None:
+            raise ValueError("cross_attention_dim must be specified for CrossAttnUpBlock2D")
+        return StyleDropCrossAttnUpBlock2D(
             num_layers=num_layers,
             transformer_layers_per_block=transformer_layers_per_block,
             in_channels=in_channels,

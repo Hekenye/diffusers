@@ -51,6 +51,7 @@ else:
         UNet2DModel,
         UNet3DConditionModel,
         VQModel,
+        StyleDropUNet2DConditionModel
     )
     from .optimization import (
         get_constant_schedule,

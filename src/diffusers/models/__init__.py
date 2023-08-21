@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from ..utils import is_flax_available, is_torch_available
-
+from diffusers.models.adapter4unet import StyleDropUNet2DConditionModel
 
 if is_torch_available():
     from .adapter import MultiAdapter, T2IAdapter
